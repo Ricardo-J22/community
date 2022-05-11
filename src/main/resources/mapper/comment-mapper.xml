@@ -4,6 +4,12 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.demo.community.dao.CommentMapper">
 
+
+    <insert id="insertComment" keyProperty="id">
+        insert into comment (user_id, entity_type, entity_id, target_id, content, status, create_time) VALUES
+        (#{userId}, #{entityType}, #{entityId}, #{targetId}, #{content}, #{status}, #{createTime});
+    </insert>
+
     <select id="selectCommentsByEntity" resultType="com.demo.community.entity.Comment">
         select *
         from comment
@@ -19,6 +25,9 @@
         where status = 0
         AND entity_type = #{entityType}
         AND entity_id = #{entityId}
+    </select>
+    <select id="selectCommentById" resultType="com.demo.community.entity.Comment">
+        select * from comment where id = #{id}
     </select>
 
 </mapper>

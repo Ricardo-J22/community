@@ -4,7 +4,9 @@ import com.demo.community.entity.DiscussPost;
 import com.demo.community.entity.Page;
 import com.demo.community.entity.User;
 import com.demo.community.service.DiscussPostService;
+import com.demo.community.service.LikeService;
 import com.demo.community.service.UserService;
+import com.demo.community.util.CommunityConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-public class HomeController {
+public class HomeController implements CommunityConstant {
 
     @Autowired
     private DiscussPostService discussPostService;
@@ -26,7 +28,11 @@ public class HomeController {
     @Autowired
     private UserService userService;
 
-    @GetMapping(path = {"/index", "/"})
+    @Autowired
+    private LikeService likeService;
+
+    @RequestMapping(path = "/index", method = RequestMethod.GET)
+
     public String getIndexPage(Model model, Page page) {
         // 方法调用钱,SpringMVC会自动实例化Model和Page,并将Page注入Model.
         // 所以,在thymeleaf中可以直接访问Page对象中的数据.
@@ -41,11 +47,20 @@ public class HomeController {
                 map.put("post", post);
                 User user = userService.findUserById(post.getUserId());
                 map.put("user", user);
+
+                long likeCount = likeService.findEntityLikeCount(ENTITY_TYPE_POST, post.getId());
+                map.put("likeCount", likeCount);
+
                 discussPosts.add(map);
             }
         }
         model.addAttribute("discussPosts", discussPosts);
         return "/index";
+    }
+
+    @RequestMapping(path = "/error", method = RequestMethod.GET)
+    public String getErrorPage() {
+        return "/error/500";
     }
 
 }
