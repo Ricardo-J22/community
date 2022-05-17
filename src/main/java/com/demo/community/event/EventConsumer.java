@@ -1,8 +1,11 @@
 package com.demo.community.event;
 
 import com.alibaba.fastjson.JSONObject;
+import com.demo.community.entity.DiscussPost;
 import com.demo.community.entity.Event;
 import com.demo.community.entity.Message;
+import com.demo.community.service.DiscussPostService;
+import com.demo.community.service.ElasticSearchService;
 import com.demo.community.service.MessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -22,6 +25,12 @@ public class EventConsumer {
 
     @Autowired
     MessageService messageService;
+
+    @Autowired
+    DiscussPostService discussPostService;
+
+    @Autowired
+    ElasticSearchService elasticSearchService;
 
     @KafkaListener(topics = {TOPIC_COMMENT, TOPIC_LIKE, TOPIC_FOLLOW})
     public void handleCommentMessage(ConsumerRecord record){
@@ -50,5 +59,36 @@ public class EventConsumer {
         }
         message.setContent(JSONObject.toJSONString(content));
         messageService.addMessage(message);
+    }
+
+    //消费发帖事件
+    @KafkaListener(topics = {TOPIC_PUBLISH})
+    public void handlePublishMessage(ConsumerRecord record){
+        if(record == null || record.value() == null){
+            log.error("消息的内容为空");
+            return;
+        }
+        Event event = JSONObject.parseObject(record.value().toString(), Event.class);
+        if(event == null){
+            log.error("消息格式错误！");
+            return;
+        }
+
+        DiscussPost post = discussPostService.findDiscussPostById(event.getEntityId());
+        elasticSearchService.saveDiscussPost(post);
+    }
+
+    @KafkaListener(topics = {TOPIC_DELETE})
+    public void handleDeleteMessage(ConsumerRecord record){
+        if(record == null || record.value() == null){
+            log.error("消息的内容为空");
+            return;
+        }
+        Event event = JSONObject.parseObject(record.value().toString(), Event.class);
+        if(event == null){
+            log.error("消息格式错误！");
+            return;
+        }
+        elasticSearchService.deleteDiscussPost(event.getEntityId());
     }
 }

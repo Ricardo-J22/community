@@ -54,4 +54,14 @@ public interface CommunityConstant {
     String TOPIC_FOLLOW = "follow";
 
     int SYSTEM_USER_ID = 1;
+
+    String TOPIC_PUBLISH = "publish";
+
+    String AUTHORITY_USER = "user";
+
+    String AUTHORITY_ADMIN = "admin";
+
+    String AUTHORITY_MODERATOR = "moderator";
+
+    String TOPIC_DELETE = "delete";
 }

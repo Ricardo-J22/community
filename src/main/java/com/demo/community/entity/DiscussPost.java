@@ -1,13 +1,17 @@
 package com.demo.community.entity;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.alibaba.fastjson.annotation.JSONType;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.util.Date;
 
-@Document(indexName = "discusspost")
+@Document(indexName = "discusspost", shards = 6, replicas = 3)
 public class DiscussPost {
 
     @Id
@@ -29,7 +33,7 @@ public class DiscussPost {
     @Field(type = FieldType.Integer)
     private int status;
 
-    @Field(type = FieldType.Date)
+    @Field(type = FieldType.Date, format = DateFormat.epoch_second)
     private Date createTime;
 
     @Field(type = FieldType.Integer)

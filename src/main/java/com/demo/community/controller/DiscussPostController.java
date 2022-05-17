@@ -1,9 +1,7 @@
 package com.demo.community.controller;
 
-import com.demo.community.entity.Comment;
-import com.demo.community.entity.DiscussPost;
-import com.demo.community.entity.Page;
-import com.demo.community.entity.User;
+import com.demo.community.entity.*;
+import com.demo.community.event.EventProducer;
 import com.demo.community.service.CommentService;
 import com.demo.community.service.DiscussPostService;
 import com.demo.community.service.LikeService;
@@ -14,10 +12,7 @@ import com.demo.community.util.HostHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
@@ -40,6 +35,9 @@ public class DiscussPostController implements CommunityConstant {
     @Autowired
     private LikeService likeService;
 
+    @Autowired
+    private EventProducer eventProducer;
+
     @RequestMapping(path = "/add", method = RequestMethod.POST)
     @ResponseBody
     public String addDiscussPost(String title, String content) {
@@ -54,6 +52,13 @@ public class DiscussPostController implements CommunityConstant {
         post.setContent(content);
         post.setCreateTime(new Date());
         discussPostService.addDiscussPost(post);
+        //触发发帖事件
+        Event event = new Event()
+                .setTopic(TOPIC_PUBLISH)
+                .setUserId(user.getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(post.getId());
+        eventProducer.fireEvent(event);
 
         // 报错的情况,将来统一处理.
         return CommunityUtil.getJSONString(0, "发布成功!");
@@ -144,4 +149,49 @@ public class DiscussPostController implements CommunityConstant {
         return "/site/discuss-detail";
     }
 
+
+    @PostMapping("/top")
+    @ResponseBody
+    public String setTop(int id){
+        discussPostService.updateType(id, 1);
+
+        Event event = new Event()
+                .setTopic(TOPIC_PUBLISH)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+
+        return CommunityUtil.getJSONString(0);
+    }
+
+    @PostMapping("/wonderful")
+    @ResponseBody
+    public String setWonderful(int id){
+        discussPostService.updateStatus(id, 1);
+
+        Event event = new Event()
+                .setTopic(TOPIC_PUBLISH)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+
+        return CommunityUtil.getJSONString(0);
+    }
+
+    @PostMapping("/delete")
+    @ResponseBody
+    public String setDelete(int id){
+        discussPostService.updateStatus(id, 2);
+
+        Event event = new Event()
+                .setTopic(TOPIC_DELETE)
+                .setUserId(hostHolder.getUser().getId())
+                .setEntityType(ENTITY_TYPE_POST)
+                .setEntityId(id);
+        eventProducer.fireEvent(event);
+
+        return CommunityUtil.getJSONString(0);
+    }
 }
